@@ -7,12 +7,21 @@ import (
 )
 
 type VentaService struct {
-	ventaRepo    repositories.VentaRepository
-	productoRepo repositories.ProductoRepository
+	ventaRepo         repositories.VentaRepository
+	productoRepo      repositories.ProductoRepository
+	respuestaRepo     repositories.RespuestaRepository
 }
 
-func NewVentaService(ventaRepo repositories.VentaRepository, productoRepo repositories.ProductoRepository) *VentaService {
-	return &VentaService{ventaRepo: ventaRepo, productoRepo: productoRepo}
+func NewVentaService(
+	ventaRepo repositories.VentaRepository,
+	productoRepo repositories.ProductoRepository,
+	respuestaRepo repositories.RespuestaRepository,
+) *VentaService {
+	return &VentaService{
+		ventaRepo:     ventaRepo,
+		productoRepo:  productoRepo,
+		respuestaRepo: respuestaRepo,
+	}
 }
 
 func (s *VentaService) ProcesarVenta(venta entities.Venta) error {
@@ -34,6 +43,20 @@ func (s *VentaService) ProcesarVenta(venta entities.Venta) error {
 
 	// Actualizar inventario
 	err = s.productoRepo.ActualizarInventario(venta.Producto, venta.Cantidad)
+	if err != nil {
+		return err
+	}
+
+	// Crear la respuesta
+	respuesta := entities.Respuesta{
+		Estado:   "éxito",
+		Mensaje:  "Venta registrada correctamente",
+		Producto: venta.Producto,
+		Cantidad: venta.Cantidad,
+	}
+
+	// Enviar la respuesta a la nueva cola
+	err = s.respuestaRepo.EnviarRespuesta(respuesta)
 	if err != nil {
 		return err
 	}

@@ -3,9 +3,9 @@ package routes
 import (
 	"net/http"
 
+	"API_TWO/src/esp32/application"
 	"API_TWO/src/esp32/infraestructure/controllers"
 	"API_TWO/src/esp32/infraestructure/repositories"
-	"API_TWO/src/esp32/application"
 )
 
 func NewVentaRouter() http.Handler {
@@ -14,7 +14,8 @@ func NewVentaRouter() http.Handler {
 	// Inicializar dependencias
 	ventaRepo := repositories.NewVentaRepositoryPostgres()
 	productoRepo := repositories.NewProductoRepositoryPostgres()
-	ventaService := application.NewVentaService(ventaRepo, productoRepo)
+	respuestaRepo := repositories.NewRespuestaRepositoryRabbitMQ()
+	ventaService := application.NewVentaService(ventaRepo, productoRepo, respuestaRepo)
 	ventaController := controllers.NewVentaController(ventaService)
 
 	// Configurar rutas
